@@ -1,18 +1,33 @@
 <?php include 'connect/db.php'; ?>
+<?php if(!empty($_REQUEST['post_id'])): $post_id = $_REQUEST['post_id'];?>
+  <?php $getPost = mysqli_query($dbc,"SELECT * FROM post WHERE id='$post_id'");
+    $fetchPost =mysqli_fetch_assoc($getPost);
+    $cat = fetchById($dbc,"exp_categories",$fetchPost['cat_id']);
+  $trip = fetchById($dbc,"trip",$fetchPost['trip_id']);
+  $along = explode(',', $fetchPost['along']);
+  $loc_id = $trip['location_id'];
+  $location = fetchById($dbc,"location",$loc_id);
+  $name="";
+   foreach($along as $val):
+  $user = fetchById($dbc,"users",$val);
+      $name.=' <a href="index.php?nav=user_profile&user_id='.$val.'"><label for="" class="label label-default">'.$user['name'].'</label></a>';
+     endforeach; ?>
 <!DOCTYPE html>
 <html lang="en">
   <head>
    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
    <meta charset="utf-8">
     <link rel="stylesheet" href="links/style.css">
+    <title>Find your Location</title>
   </head>
   <body>
-  <div class="container" style="background-color: transparent;">
+  <div class="container">
   	<div class="options-box">
-  		<a href="index.php">Go Back</a>
-      <br>
-            <a href="feeds.php">News Feed</a>
-
+  		<h1>Find your Location</h1>
+  		<div>
+  			<input id="show-listings" type="button" value="Show listing">
+  			<input id="hide-listings" type="button" value="Hide listing">
+  		</div>
   	</div>
   </div>
 
@@ -93,8 +108,8 @@
       // function initMap() {
         // Constructor creates a new map - only center and zoom are required.
         map = new google.maps.Map(document.getElementById('map'), {
-          center: {lat: 31.42, lng: 73.02},
-          zoom: 13,
+          center: {lat: 31.42, lng: 73.00},
+          zoom: 20,
           styles: styles,
           mapTypeControl: false
         });
@@ -102,13 +117,13 @@
         // Normally we'd have these in a database instead.
         var locations = [
           {
-            title:'Name: Dilawar'+'<br>'+'Phone: 03360613420'+'<br>'+'Address:  '+'<br>'+'Blood Group: ',
-            location:{lat:31.413419,lng:73.067068}
-          },
-        {title:'Name: Asfand'+'<br>'+'Phone: 03360613420'+'<br>'+'Address:  '+'<br>'+'Blood Group: ',location:{lat:31.417227,lng:73.060013}},
-        {title:'Name: Jahanzaib'+'<br>'+'Phone: 03360613420'+'<br>'+'Address:  '+'<br>'+'Blood Group: ',location:{lat:31.411695,lng:73.061747}},
-        {title:'Name: Addel'+'<br>'+'Phone: 03360613420'+'<br>'+'Address:  '+'<br>'+'Blood Group: ',location:{lat:31.423549,lng:73.061381}},
-        {title:'Name: Hassan'+'<br>'+'Phone: 03360613420'+'<br>'+'Address:  '+'<br>'+'Blood Group: ',location:{lat:31.425096,lng:73.051140}}
+            title:'Trip: <?=$trip['name']?>'+'<br>'+'Title: <?=$fetchPost['title']?>'+'<br>'+'Description:  '+'<?=$fetchPost['description']?><br>'+'Friends: <?=$name?>',
+            location:{lat:<?=$_REQUEST['lat']?>,lng:<?=$_REQUEST['lng']?>}
+          }
+        // {title:'Name: Asfand'+'<br>'+'Phone: 03360613420'+'<br>'+'Address:  '+'<br>'+'Blood Group: ',location:{lat:31.417227,lng:73.060013}},
+        // {title:'Name: Jahanzaib'+'<br>'+'Phone: 03360613420'+'<br>'+'Address:  '+'<br>'+'Blood Group: ',location:{lat:31.411695,lng:73.061747}},
+        // {title:'Name: Addel'+'<br>'+'Phone: 03360613420'+'<br>'+'Address:  '+'<br>'+'Blood Group: ',location:{lat:31.423549,lng:73.061381}},
+        // {title:'Name: Hassan'+'<br>'+'Phone: 03360613420'+'<br>'+'Address:  '+'<br>'+'Blood Group: ',location:{lat:31.425096,lng:73.051140}}
         ];
         var largeInfowindow = new google.maps.InfoWindow();
         var bounds = new google.maps.LatLngBounds();
@@ -132,41 +147,22 @@
     	// };	
 
     		// The following group uses the location array to create an array of markers on initialize.
-      //  for (var i = 0; i < locations.length; i++) {
+        for (var i = 0; i < locations.length; i++) {
           // Get the position from the location array.
-    <?php 
-          $getPost = mysqli_query($dbc,"SELECT * FROM post");
-           $i=0;
-    while($fetchPost =mysqli_fetch_assoc($getPost)):
-      $cat = fetchById($dbc,"exp_categories",$fetchPost['cat_id']);
-      $trip = fetchById($dbc,"trip",$fetchPost['trip_id']);
-      $along = explode(',', $fetchPost['along']);
-      $loc_id = $trip['location_id'];
-      $location = fetchById($dbc,"location",$loc_id);
-        $fetchUser = fetchById($dbc,"users",$fetchPost['user_id']);
-
-      $name="";
-   foreach($along as $val):
-  $user = fetchById($dbc,"users",$val);
-      $name.=' <a href="index.php?nav=user_profile&user_id='.$val.'"><label for="" class="label label-default">'.$user['name'].'</label></a>';
-     endforeach; 
-  
-     ?>
-          var position ;
-          locations[<?=$i?>].title='<p align="center"> <?=strtoupper($fetchUser['name'])?> </p><img width="100" height="100" src="post_uploads/<?=$fetchPost['pic']?>"><br>Title: <?=$fetchPost['title']?><br> Experience: '+'<?=$cat['name']?><br> Trip: '+'<?=$trip['name']?><br> Friends: '+'<?=$name?><br>Album: <a href="albums.php?postid=<?=$fetchPost['id']?>&action=view&postid=<?=$fetchPost['id']?>">View </a>';
-          var title = locations[<?=$i?>].title;
-          // var address = locations[<?=$i?>].title;
-          // var phone = locations[<?=$i?>].title;
+          var position = locations[i].location;
+          var title = locations[i].title;
+          var address = locations[i].title;
+          var phone = locations[i].title;
           // Create a marker per location, and put into markers array.
           var marker = new google.maps.Marker({
             map: map,
             //icon:image,
             // shape,shape,
-            position: {lat:<?=$location['lat']?>,lng:<?=$location['lng']?>},
+            position: position,
             title: title,
             animation: google.maps.Animation.DROP,
             icon: defaultIcon,
-            id: <?=$i?>
+            id: i
           });
     		// Push the marker to our array of markers.
           markers.push(marker);
@@ -174,7 +170,7 @@
           marker.addListener('click', function() {
             populateInfoWindow(this, largeInfowindow);
           });
-          bounds.extend(markers[<?=$i?>].position);
+          bounds.extend(markers[i].position);
           // Two event listeners - one for mouseover, one for mouseout,
           // to change the colors back and forth.
           marker.addListener('mouseover', function() {
@@ -183,8 +179,7 @@
           marker.addListener('mouseout', function() {
             this.setIcon(defaultIcon);
           });
-          <?php $i++; endwhile; ?>
-        //}//for ends
+        }
         // Extend the boundaries of the map for each marker
         map.fitBounds(bounds);
  		document.getElementById('show-listings').addEventListener('click', showListings);
@@ -194,7 +189,7 @@
     		if(infowindow.marker != marker)
     		{
     			infowindow.marker = marker;
-    			infowindow.setContent('<div>' + '' +  '<hr>'+'<h3>' + marker.title +'</h3>'+'<h3>'+marker.position+'</h3>'+'</div>' );
+    			infowindow.setContent('<div>' + '<img width="100" height="100" src="post_uploads/<?=$fetchPost['pic']?>">' +  '<hr>'+'<h3>' + marker.title +'</h3>'+'<h3>'+marker.position+'</h3>'+'</div>' );
 
     			infowindow.open(map, marker);
     			infowindow.addListener('closeclick',function(){
@@ -239,3 +234,6 @@
    
   </body>
 </html>
+  <?php else: ?>
+    <h1>No Post Available</h1>
+<?php  endif; ?>
